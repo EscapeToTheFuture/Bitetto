@@ -5,14 +5,14 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: "/Adelfia/",
+  base: "/Bitetto/",
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       manifest: {
-        "name": "La faida tra Montrone e Canneto",
-        "short_name": "Montrone vs Canneto",
+        "name": "Il Castello Baronale",
+        "short_name": "Castello Baronale",
         "description": "Un antico villaggio è minacciato da un imminente attacco. La Torre di Canneto, deve essere messa in sicurezza prima del calare della notte.",
         "start_url": "/",
         "display": "fullscreen",

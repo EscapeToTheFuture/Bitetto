@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://escapetothefuture.github.io/Adelfia",
+  "homepage": "https://escapetothefuture.github.io/Bitetto",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
