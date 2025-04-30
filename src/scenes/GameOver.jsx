@@ -18,8 +18,8 @@ const GameOver = () => {
   }, [localStorage.getItem("gameover_reason")]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-[url(../images/bg-splash.webp)] bg-center bg-clip-border bg-cover bg-origin-border bg-no-repeat">
-      <div className="backdrop-brightness-50 h-full w-full flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center h-screen bg-[url(../images/bg-splash.png)] bg-center bg-clip-border bg-cover bg-origin-border bg-no-repeat">
+      <div className="h-full w-full flex flex-col items-center justify-center">
         <h1 className="2xl:w-1/2 md:w-2/3 w-2/3 text-5xl md:text-7xl xl:text-8xl font-bold text-center select-none font-elite text-orange-600 z-1">
           Game over!
         </h1>

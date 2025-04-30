@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import Button from "@components/Button";
-import ampolla from "@assets/images/ampolla.png";
 
 import ambientSound from "@assets/sounds/splashscreen/horror-lightning-strike-247744.mp3";
 import startSound from "@assets/sounds/splashscreen/among-us-sound-157106.mp3";
@@ -76,8 +75,8 @@ const SplashScreen = ({ title, location }) => {
   
 
   return (
-    <div className="w-full flex flex-col items-center justify-center gap-2 md:gap-10 h-svh bg-[url(../images/bg-splash.webp)] bg-center bg-clip-border bg-cover bg-origin-border bg-no-repeat gap-auto">
-      <div className="absolute inset-0 bg-black opacity-60"></div>
+    <div className="w-full flex flex-col items-center justify-center gap-2 md:gap-10 h-svh bg-[url(../images/bg-splash.png)] bg-center bg-clip-border bg-cover bg-origin-border bg-no-repeat gap-auto">
+      <div className="absolute inset-0 bg-black opacity-0"></div>
 
       {/* Bottone per consentire audio */}
       {!playing["ambient"].playing && (
@@ -155,8 +154,6 @@ const SplashScreen = ({ title, location }) => {
               }, 3000);
             }
           }}
-          src={ampolla}
-          alt="ampolla"
           className="select-none h-10 xl:h-16 z-1 transition-transform duration-300 ease-in-out transform hover:scale-120 animate-shake"
         />
       </div>
