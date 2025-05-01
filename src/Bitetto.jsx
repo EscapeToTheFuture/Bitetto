@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import GameOver from "./scenes/GameOver";
 import SplashScreen from "./scenes/SplashScreen";
 import Scena1 from "./scenes/Scena1";
+import Scena2 from "./scenes/Scena2";
 
 import Win from "./scenes/Win";
 
@@ -63,6 +64,7 @@ const Bitetto = () => {
           <Routes>
             <Route path="/" element={<SplashScreen location={'SOLE LUNA BITETTO'} title={'PALAZZO BARONALE'} />} />
             <Route path="/scena1" element={<Scena1/>} />
+            <Route path="/scena2" element={<Scena2/>} />
             {/* Game over */}
             <Route path="*" element={<GameOver/>} />
             {/* Win */}
