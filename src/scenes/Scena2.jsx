@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ImageMapper from "react-img-mapper";
 import Dialogue from "../components/Dialogue";
 import { useNavigate } from "react-router";
@@ -8,6 +8,9 @@ import Room3 from "../assets/images/backGrounds/Room3.png";
 import Room4 from "../assets/images/backGrounds/Room4.png";
 import Room5 from "../assets/images/backGrounds/Room5.png";
 import RoomFinal from "../assets/images/backGrounds/RoomFinal.png";
+import basement from "../assets/sounds/generic/basement.mp3";
+import unlock from "../assets/sounds/generic/unlockwall.mp3";
+import quadro from "../assets/sounds/generic/quadro.mp3";
 
 const Scena2 = () => {
   const rooms = {
@@ -19,15 +22,124 @@ const Scena2 = () => {
     5: { id: 5, src: RoomFinal },
   };
 
-  const navigate = useNavigate();
+  const hints = [
+    "Forse devo iniziare dagli occhiali di ferro.",
+    "Quella chiave sarà importante.",
+    "I libri rossi sono un indizio.",
+    "La palla con cui giocava da piccolo!",
+    "Il quadro si è mosso!",
+    "Dovrei passare attraverso questo passaggio.",
+  ];
 
+  const navigate = useNavigate();
   const [bgImage, setBgImage] = useState(0);
   const [fadeClass, setFadeClass] = useState(""); // Stato per gestire la classe di dissolvenza
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
+  const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
+  const basementAudioRef = useRef(new Audio(basement)); // Riferimento per il suono di sottofondo
+  const unlockAudioRef = useRef(new Audio(unlock)); // Riferimento per il suono di sblocco
+
+  // Riproduci il suono di sottofondo "basement" all'inizio della scena
+  useEffect(() => {
+    const audio = basementAudioRef.current;
+    audio.volume = 0.5; // Imposta il volume iniziale
+    audio.loop = true; // Riproduzione in loop
+    audio
+      .play()
+      .then(() => {
+        console.log("Basement audio avviato correttamente");
+      })
+      .catch((error) => {
+        console.error("Errore nella riproduzione di basement:", error);
+      });
+
+    return () => {
+      audio.pause(); // Pausa il suono quando il componente viene smontato
+      audio.currentTime = 0; // Resetta il suono
+    };
+  }, []);
+
+  // Timer per mostrare il suggerimento
+  useEffect(() => {
+    const resetTimer = () => {
+      setShowHint(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setShowHint(true); // Mostra il suggerimento dopo 7 secondi di inattività
+      }, 7000);
+    };
+
+    let timer = setTimeout(() => {
+      setShowHint(true);
+    }, 7000);
+
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+    };
+  }, [bgImage]);
+
+  useEffect(() => {
+    if (bgImage === 4) {
+      // Imposta l'indice del dialogo sull'ultimo
+      setCurrentDialogueIndex(scene.dialogue.length-1);
+    }
+  }, [bgImage]);
 
   const handleDialogueClose = () => {
     if (currentDialogueIndex < scene.dialogue.length - 1) {
       setCurrentDialogueIndex(currentDialogueIndex + 1);
+    }
+  };
+
+  const handleAreaClick = (area) => {
+    if (area.id === "occhiali" && bgImage === 0) {
+      // Passa alla stanza successiva
+      setBgImage(1);
+      console.log("Hai cliccato sugli occhiali. Passa alla stanza successiva.");
+    } else if (area.id === "scettro" && bgImage === 1) {
+      // Passa alla stanza successiva
+      setBgImage(2);
+      console.log("Hai cliccato sullo scettro. Passa alla stanza successiva.");
+    } else if (area.id === "libri" && bgImage === 2) {
+      // Passa alla stanza successiva
+      setBgImage(3);
+      console.log("Hai cliccato sui libri. Passa alla stanza successiva.");
+    } else if (area.id === "palla" && bgImage === 3) {
+      // Passa alla stanza successiva
+      setBgImage(4);
+      console.log("Hai cliccato sulla palla. Passa alla stanza successiva.");
+    } else if (area.id === "porta" && bgImage === 4) {
+      // Passa alla stanza finale
+      setFadeClass("fade-out");
+      setTimeout(() => {
+        setBgImage(5);
+        setFadeClass("fade-in");
+        const quadroAudio = new Audio(quadro);
+        quadroAudio.volume = 0.5;
+        quadroAudio
+          .play()
+          .then(() => {
+            console.log("Suono quadro riprodotto correttamente");
+          })
+          .catch((error) => {
+            console.error("Errore nella riproduzione di quadro:", error);
+          });
+      }, 1000);
+    } else if (area.id === "porta" && bgImage === 5) {
+      // Naviga alla scena successiva
+      setFadeClass("fade-out");
+      setTimeout(() => {
+        navigate("/scena3");
+      }, 1000);
+    } else {
+      console.log(
+        `Area cliccata: ${area.id}, ma non è gestita per bgImage: ${bgImage}`
+      );
     }
   };
 
@@ -39,7 +151,7 @@ const Scena2 = () => {
       },
       {
         type: "narrator",
-        text: "Ogni quadro ritra il Barone in diverse fasi della vita:",
+        text: "Ogni quadro ritrae il Barone in diverse fasi della vita:",
       },
       {
         type: "narrator",
@@ -69,10 +181,10 @@ const Scena2 = () => {
     ],
   };
 
-  console.log("Current bgImage:", bgImage);
-
   return (
-    <div className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}>
+    <div
+      className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}
+    >
       {currentDialogueIndex < scene.dialogue.length - 1 && (
         <Dialogue
           key={currentDialogueIndex}
@@ -81,14 +193,23 @@ const Scena2 = () => {
         />
       )}
 
-      {bgImage === 4 ? (
+      {showHint && (
         <Dialogue
-          dialogue={scene.dialogue[7]}
-          onClose={() => {
-            setCliccable(true);
+          dialogue={{
+            speaker: "Suggerimento",
+            text: hints[bgImage], // Mostra il suggerimento corrispondente al bgImage
           }}
+          onClose={() => setShowHint(false)}
         />
-      ) : null}
+      )}
+
+      {bgImage == 4 && (
+          <Dialogue
+            key={currentDialogueIndex}
+            onClose={handleDialogueClose}
+            dialogue={scene.dialogue[currentDialogueIndex]}
+          />
+        )}
 
       <ImageMapper
         src={rooms[bgImage].src}
@@ -139,37 +260,7 @@ const Scena2 = () => {
           height: "100vh", // Adatta l'immagine all'altezza del viewport
           objectFit: "contain", // Mantiene le proporzioni e assicura che l'immagine non venga tagliata
         }}
-        onClick={(area) => {
-          // Verifica se l'area è disabilitata
-          if (area.disable) {
-            console.log(`L'area ${area.id} è disabilitata.`);
-            return;
-          }
-
-          // Esegui l'azione solo se l'area è abilitata
-          if (area.id === "occhiali") {
-            setBgImage(1);
-          } else if (area.id === "scettro") {
-            setBgImage(2);
-          } else if (area.id === "libri") {
-            setBgImage(3);
-          } else if (area.id === "palla") {
-            setBgImage(4);
-          } else if (area.id === "porta" && bgImage === 4) {
-            // Aggiungi dissolvenza tra bgImage[4] e bgImage[5]
-            setFadeClass("fade-out");
-            setTimeout(() => {
-              setBgImage(5); // Cambia l'immagine di sfondo a 5
-              setFadeClass("fade-in");
-            }, 1000); // Tempo per la dissolvenza in uscita
-          } else if (area.id === "porta" && bgImage === 5) {
-            // Aggiungi dissolvenza in uscita prima di navigare
-            setFadeClass("fade-out");
-            setTimeout(() => {
-              navigate("/scena3"); // Naviga a Scena3 solo dopo la dissolvenza
-            }, 1000); // Tempo per la dissolvenza in uscita
-          }
-        }}
+        onClick={(area) => handleAreaClick(area)}
       />
     </div>
   );

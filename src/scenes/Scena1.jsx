@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Atrio1 from "../assets/images/backGrounds/Atrio-1.png";
 import Atrio2 from "../assets/images/backGrounds/Atrio-2.png";
 import Atrio3 from "../assets/images/backGrounds/Atrio-3.png";
-import Corridoio from "../assets/images/backGrounds/Corridoio.png"; // Importa Atrio-4
+import Corridoio from "../assets/images/backGrounds/Corridoio.png";
 import ImageMapper from "react-img-mapper";
 import Dialogue from "../components/Dialogue";
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import footsteps from "../assets/sounds/generic/footsteps.mp3";
+import museoambient from "../assets/sounds/generic/museoambient.mp3";
 
 const Scena1 = () => {
   const scene = {
@@ -45,20 +46,69 @@ const Scena1 = () => {
     { id: 0, src: Atrio1 },
     { id: 1, src: Atrio2 },
     { id: 2, src: Atrio3 },
-    { id: 3, src: Corridoio }, // Aggiungi l'immagine del corridoio
+    { id: 3, src: Corridoio },
   ];
 
   const [bgImage, setBgImage] = useState(0);
-  const [fadeClass, setFadeClass] = useState(""); // Stato per gestire la classe di dissolvenza
-
+  const [fadeClass, setFadeClass] = useState("");
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
+  const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
+  const [ambientAudio, setAmbientAudio] = useState(new Audio(museoambient));
   const navigate = useNavigate();
-  
+
+  useEffect(() => {
+    ambientAudio.volume = 0.2;
+    ambientAudio.loop = true;
+    ambientAudio.play();
+
+    return () => {
+      ambientAudio.pause();
+      ambientAudio.currentTime = 0;
+    };
+  }, [ambientAudio]);
+
+  // Timer per mostrare il suggerimento
+  useEffect(() => {
+    const resetTimer = () => {
+      setShowHint(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setShowHint(true); // Mostra il suggerimento dopo 7 secondi di inattività
+      }, 7000);
+    };
+
+    let timer = setTimeout(() => {
+      setShowHint(true);
+    }, 7000);
+
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+    };
+  }, []);
+
+  const fadeOutAudio = (audio, onComplete) => {
+    let volume = audio.volume;
+    const fadeInterval = setInterval(() => {
+      if (volume > 0) {
+        volume -= 0.05;
+        audio.volume = Math.max(volume, 0);
+      } else {
+        clearInterval(fadeInterval);
+        audio.pause();
+        if (onComplete) onComplete();
+      }
+    }, 100);
+  };
+
   const handleDialogueClose = () => {
     if (currentDialogueIndex < scene.dialogue.length - 1) {
       setCurrentDialogueIndex(currentDialogueIndex + 1);
-  
-      // Cambia lo sfondo quando i primi tre dialoghi sono completati
+
       if (currentDialogueIndex + 1 === 3) {
         setBgImage(1);
       }
@@ -67,22 +117,38 @@ const Scena1 = () => {
 
   const handleAreaClick = (area) => {
     if (area.id === "corridoio" && currentDialogueIndex === scene.dialogue.length - 1) {
-      setFadeClass(""); // Inizia la dissolvenza in uscita
-        setBgImage(2); // Imposta bgImage[2] senza dissolvenza
-        setFadeClass(""); // Rimuove la classe di dissolvenza per il passaggio immediato
+      setShowHint(false);
+
+      fadeOutAudio(ambientAudio, () => {
+        ambientAudio.volume = 0.5;
+      });
+
+      setFadeClass("");
+      setBgImage(2);
+      setFadeClass("");
+      setTimeout(() => {
+        setFadeClass("fade-out");
         setTimeout(() => {
-          setFadeClass("fade-out"); // Inizia una nuova dissolvenza in uscita
+          setBgImage(3);
+          setFadeClass("fade-in");
+
+          ambientAudio.pause();
+          ambientAudio.currentTime = 0;
+
+          const passi = new Audio(footsteps);
+          passi.volume = 0.5;
+          passi.play();
+
           setTimeout(() => {
-            setBgImage(3); // Imposta bgImage[3]
-            setFadeClass("fade-in"); // Dissolvenza in entrata per bgImage[3]
+            setFadeClass("fade-out");
             setTimeout(() => {
-              setFadeClass("fade-out"); // Dissolvenza in uscita finale
-              setTimeout(() => {
-                navigate("/scena2"); // Naviga a Scena2
-              }, 2000); // Tempo per la dissolvenza in uscita
-            }, 2000); // Tempo per la dissolvenza in entrata
-          }, 1000); // Tempo per la dissolvenza in uscita
-        }, 1000); // Tempo per visualizzare bgImage[3]
+              passi.pause();
+              passi.currentTime = 0;
+              navigate("/scena2");
+            }, 2000);
+          }, 2000);
+        }, 1000);
+      }, 1000);
     }
   };
 
@@ -102,16 +168,27 @@ const Scena1 = () => {
           {
             id: "corridoio",
             shape: "rect",
-            coords: [3275, 158, 3998, 1530], // Coordinate per il corridoio
-            disabled: currentDialogueIndex < scene.dialogue.length - 1, // Disabilita l'area fino al completamento dei dialoghi
+            coords: [3275, 158, 3998, 1530],
+            disabled: currentDialogueIndex < scene.dialogue.length - 1,
           },
         ]}
         style={{
-          width: "100%", // Adatta l'immagine alla larghezza del contenitore
-          height: "auto", // Mantieni le proporzioni dell'immagine
-          objectFit: "contain", // Assicura che l'immagine non venga tagliata
+          width: "100%",
+          height: "auto",
+          objectFit: "contain",
         }}
       />
+
+      {showHint && (
+        <Dialogue
+          dialogue={{
+            speaker: "Suggerimento",
+            text: "Prova a cliccare sul corridoio buio per scoprire cosa nasconde.",
+          }}
+          onClose={() => setShowHint(false)}
+        />
+      )}
+
       {scene.dialogue.map(
         (dialogue, index) =>
           index === currentDialogueIndex && (
