@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Atrio1 from "../assets/images/backGrounds/Atrio-1.png";
-import Atrio2 from "../assets/images/backGrounds/Atrio-2.png";
-import Atrio3 from "../assets/images/backGrounds/Atrio-3.png";
-import Corridoio from "../assets/images/backGrounds/Corridoio.png";
+import Atrio1 from "../assets/images/backGrounds/atrio/Atrio-1.png";
+import Atrio2 from "../assets/images/backGrounds/atrio/Atrio-2.png";
+import Atrio3 from "../assets/images/backGrounds/atrio/Atrio-3.png";
+import Corridoio from "../assets/images/backGrounds/atrio/Corridoio.png";
 import ImageMapper from "react-img-mapper";
 import Dialogue from "../components/Dialogue";
 import { useNavigate } from "react-router";

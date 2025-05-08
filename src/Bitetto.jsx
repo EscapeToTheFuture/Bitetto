@@ -7,11 +7,14 @@ import SplashScreen from "./scenes/SplashScreen";
 import Scena1 from "./scenes/Scena1";
 import Scena2 from "./scenes/Scena2";
 import Scena3 from "./scenes/Scena3";
+import Scena4 from "./scenes/Scena4";
 
 import Win from "./scenes/Win";
 
 const Bitetto = () => {
-  const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
+  const [isPortrait, setIsPortrait] = useState(
+    window.matchMedia("(orientation: portrait)").matches
+  );
 
   useEffect(() => {
     const handleOrientationChange = () => {
@@ -29,7 +32,7 @@ const Bitetto = () => {
   useEffect(() => {
     let deferredPrompt;
 
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
 
@@ -37,24 +40,22 @@ const Bitetto = () => {
       setTimeout(() => {
         if (deferredPrompt) {
           deferredPrompt.prompt();
-          deferredPrompt.userChoice
-            .then((choiceResult) => {
-              if (choiceResult.outcome === "accepted") {
-                console.log("Utente ha accettato l'installazione");
-              } else {
-                console.log("Utente ha rifiutato l'installazione");
-              }
-              deferredPrompt = null;
-            });
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === "accepted") {
+              console.log("Utente ha accettato l'installazione");
+            } else {
+              console.log("Utente ha rifiutato l'installazione");
+            }
+            deferredPrompt = null;
+          });
         }
       }, 1000);
     });
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', () => {});
+      window.removeEventListener("beforeinstallprompt", () => {});
     };
   }, []);
-
 
   return (
     <>
@@ -63,14 +64,23 @@ const Bitetto = () => {
       ) : (
         <HashRouter>
           <Routes>
-            <Route path="/" element={<SplashScreen location={'SOLE LUNA BITETTO'} title={'PALAZZO BARONALE'} />} />
-            <Route path="/scena1" element={<Scena1/>} />
-            <Route path="/scena2" element={<Scena2/>} />
-            <Route path="/scena3" element={<Scena3/>} />
+            <Route
+              path="/"
+              element={
+                <SplashScreen
+                  location={"SOLE LUNA BITETTO"}
+                  title={"PALAZZO BARONALE"}
+                />
+              }
+            />
+            <Route path="/scena1" element={<Scena1 />} />
+            <Route path="/scena2" element={<Scena2 />} />
+            <Route path="/scena3" element={<Scena3 />} />
+            <Route path="/scena4" element={<Scena4 />} />
             {/* Game over */}
-            <Route path="*" element={<GameOver/>} />
+            <Route path="*" element={<GameOver />} />
             {/* Win */}
-            <Route path="/win" element={<Win/>} />
+            <Route path="/win" element={<Win />} />
           </Routes>
         </HashRouter>
       )}
