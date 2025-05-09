@@ -8,7 +8,8 @@ import Scena1 from "./scenes/Scena1";
 import Scena2 from "./scenes/Scena2";
 import Scena3 from "./scenes/Scena3";
 import Scena4 from "./scenes/Scena4";
-
+import Scena5 from "./scenes/Scena5";
+import Scena6 from "./scenes/Scena6";
 import Win from "./scenes/Win";
 
 const Bitetto = () => {
@@ -77,6 +78,8 @@ const Bitetto = () => {
             <Route path="/scena2" element={<Scena2 />} />
             <Route path="/scena3" element={<Scena3 />} />
             <Route path="/scena4" element={<Scena4 />} />
+            <Route path="/scena5" element={<Scena5 />} />
+            <Route path="/scena6" element={<Scena6 />} />
             {/* Game over */}
             <Route path="*" element={<GameOver />} />
             {/* Win */}
