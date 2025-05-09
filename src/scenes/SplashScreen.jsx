@@ -189,7 +189,9 @@ const SplashScreen = ({ title, location }) => {
           }
           navigate("/scena1");
         }}
+        
       >
+        
         INIZIA
       </Button>
     </div>

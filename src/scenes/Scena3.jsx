@@ -114,6 +114,7 @@ const Scena3 = () => {
             }}
           >
             <Button
+            stretch={true}
               onClick={() => {
                 navigate("/scena4"); // Naviga alla scena 4
               }}
@@ -124,6 +125,7 @@ const Scena3 = () => {
               Vai alla Stalla
             </Button>
             <Button
+            stretch={true}
               onClick={() => {
                 navigate("/gameOver"); // Naviga alla scena Game Over
               }}
