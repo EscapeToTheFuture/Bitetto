@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Atrio1 from "../assets/images/backGrounds/atrio/Atrio-1.png";
 import Atrio2 from "../assets/images/backGrounds/atrio/Atrio-2.png";
 import Atrio3 from "../assets/images/backGrounds/atrio/Atrio-3.png";
@@ -54,6 +54,7 @@ const Scena1 = () => {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
   const [ambientAudio, setAmbientAudio] = useState(new Audio(museoambient));
+  const [dialogoFinito, setDialogoFinito] = useState(false); // Stato per il dialogo finito
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,8 +68,17 @@ const Scena1 = () => {
     };
   }, [ambientAudio]);
 
-  // Timer per mostrare il suggerimento
+  // Imposta dialogoFinito su true solo se currentDialogueIndex è alla fine
   useEffect(() => {
+    if (currentDialogueIndex === scene.dialogue.length - 1) {
+      setDialogoFinito(true); // Imposta il dialogo come finito
+    }
+  }, [currentDialogueIndex]);
+
+  // Timer per mostrare il suggerimento (solo se dialogoFinito è true)
+  useEffect(() => {
+    if (!dialogoFinito) return; // Avvia il timer solo se dialogoFinito è true
+
     const resetTimer = () => {
       setShowHint(false);
       clearTimeout(timer);
@@ -89,7 +99,7 @@ const Scena1 = () => {
       window.removeEventListener("click", resetTimer);
       window.removeEventListener("touchstart", resetTimer);
     };
-  }, []);
+  }, [dialogoFinito]); // Dipende da dialogoFinito
 
   const fadeOutAudio = (audio, onComplete) => {
     let volume = audio.volume;
