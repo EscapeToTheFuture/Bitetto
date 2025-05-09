@@ -36,6 +36,7 @@ const Scena2 = () => {
   const [fadeClass, setFadeClass] = useState(""); // Stato per gestire la classe di dissolvenza
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
+  const [dialogoFinito, setDialogoFinito] = useState(false); // Stato per il dialogo finito
   const basementAudioRef = useRef(new Audio(basement)); // Riferimento per il suono di sottofondo
   const unlockAudioRef = useRef(new Audio(unlock)); // Riferimento per il suono di sblocco
 
@@ -59,8 +60,33 @@ const Scena2 = () => {
     };
   }, []);
 
-  // Timer per mostrare il suggerimento
+  // Riproduci il suono "unlock" quando bgImage è impostato su 4
   useEffect(() => {
+    if (bgImage === 4) {
+      const audio = unlockAudioRef.current;
+      audio.volume = 0.5; // Imposta il volume
+      audio
+        .play()
+        .then(() => {
+          console.log("Suono unlock riprodotto correttamente");
+        })
+        .catch((error) => {
+          console.error("Errore nella riproduzione di unlock:", error);
+        });
+    }
+  }, [bgImage]);
+
+  // Imposta dialogoFinito su true quando currentDialogueIndex arriva a 6
+  useEffect(() => {
+    if (currentDialogueIndex === 6) {
+      setDialogoFinito(true);
+    }
+  }, [currentDialogueIndex]);
+
+  // Timer per mostrare il suggerimento (solo se dialogoFinito è true)
+  useEffect(() => {
+    if (!dialogoFinito) return; // Avvia il timer solo se dialogoFinito è true
+
     const resetTimer = () => {
       setShowHint(false);
       clearTimeout(timer);
@@ -81,7 +107,7 @@ const Scena2 = () => {
       window.removeEventListener("click", resetTimer);
       window.removeEventListener("touchstart", resetTimer);
     };
-  }, [bgImage]);
+  }, [dialogoFinito]);
 
   useEffect(() => {
     if (bgImage === 4) {
@@ -117,8 +143,6 @@ const Scena2 = () => {
       // Passa alla stanza finale
       setFadeClass("fade-out");
       setTimeout(() => {
-        setBgImage(5);
-        setFadeClass("fade-in");
         const quadroAudio = new Audio(quadro);
         quadroAudio.volume = 0.5;
         quadroAudio
@@ -129,6 +153,10 @@ const Scena2 = () => {
           .catch((error) => {
             console.error("Errore nella riproduzione di quadro:", error);
           });
+        }, 400);
+        setTimeout(() => {
+        setBgImage(5);
+        setFadeClass("fade-in");
       }, 1000);
     } else if (area.id === "porta" && bgImage === 5) {
       // Naviga alla scena successiva
@@ -185,7 +213,7 @@ const Scena2 = () => {
     <div
       className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}
     >
-      {currentDialogueIndex < scene.dialogue.length - 1 && (
+      {currentDialogueIndex < scene.dialogue.length-1 && (
         <Dialogue
           key={currentDialogueIndex}
           onClose={handleDialogueClose}
