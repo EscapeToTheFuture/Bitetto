@@ -36,7 +36,7 @@ const Win = ({reason}) => {
                 <h1 className="2xl:w-1/2 md:w-2/3 w-2/3 text-5xl md:text-7xl xl:text-8xl font-bold text-center select-none font-elite text-blue-600 z-1" >
                     Missione conclusa!
                 </h1>
-                <h2 className="font-elite text-3xl md:text-3xl xl:text-4xl z-1 text-white select-none w-300 text-center">Hai portato in salvo Enrico</h2>
+                <h2 className="font-elite text-3xl md:text-3xl xl:text-4xl z-1 text-white select-none w-300 text-center">Hai risolto il mistero del Barone!</h2>
                 <Button
                     onClick={async () => {
                         navigate("/")
