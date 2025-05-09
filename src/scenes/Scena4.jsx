@@ -1,4 +1,3 @@
-import React from "react";
 import { useState, useEffect, useRef } from "react";
 import ImageMapper from "react-img-mapper";
 import Dialogue from "../components/Dialogue";
@@ -10,6 +9,7 @@ import stivali from "../assets/images/backGrounds/stalla/StallaStivali.png";
 import exit from "../assets/images/backGrounds/stalla/StallaUscita.png";
 import correct from "../assets/sounds/generic/correct.mp3";
 import fienile from "../assets/sounds/generic/fienile.m4a";
+import run from "../assets/sounds/generic/running.mp3";
 
 const Scena4 = () => {
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ const Scena4 = () => {
   const [disabledAreas, setDisabledAreas] = useState([]); // Stato per le aree disabilitate
   const fienileRef = useRef(new Audio(fienile)); // Riferimento per il suono di sottofondo
   const [exiting, setExiting] = useState(false); // Stato per gestire l'uscita
+  const [gameOver, setGameOver] = useState(0); // Stato per gestire il game over
+  const [fadeButtons, setFadeButtons] = useState(false); // Stato per il fade-out dei pulsanti
 
   useEffect(() => {
     const audio = fienileRef.current;
@@ -69,6 +71,16 @@ const Scena4 = () => {
         type: "speaking",
         speaker: "Guida",
         text: "Come mai non sei con il tuo gruppo!",
+      },
+      {
+        type: "speaking",
+        speaker: "Luca",
+        text: "Mi scusi, mi ero perso",
+      },
+      {
+        type: "speaking",
+        speaker: "Guida",
+        text: "Ehi, non andare da quella parte! Questo è un posto pericoloso!",
       },
     ],
   };
@@ -142,11 +154,34 @@ const Scena4 = () => {
               }
               setTimeout(() => {
                 setDialogoFinito(true); // Imposta dialogoFinito su true
-              }, 4000); // Attendi 1 secondo prima di impostare dialogoFinito su true
+              }, 3000); // Attendi 1 secondo prima di impostare dialogoFinito su true
             }}
             dialogue={dialoghi.dialogue[currentDialogueIndex]}
           />
         )}
+
+      {gameOver === 1 && (
+        <Dialogue
+          key={`dialogue-${currentDialogueIndex}`} // Chiave univoca per il dialogo principale
+          onClose={() => {
+            navigate("/gameover"); // Naviga alla pagina di game over
+          }}
+          dialogue={dialoghi.dialogue[currentDialogueIndex]}
+        />
+      )}
+
+      {gameOver === 2 && (
+        <Dialogue
+          key={`dialogue-${currentDialogueIndex}`} // Chiave univoca per il dialogo principale
+          onClose={() => {
+            setFadeClass("fade-out"); // Aggiungi la classe di fade-in
+            setTimeout(() => {
+              navigate("/scena5"); // Naviga alla pagina di game over
+            }, 1000); // Attendi 1 secondo per completare il fade-out
+          }}
+          dialogue={dialoghi.dialogue[currentDialogueIndex]}
+        />
+      )}
 
       {currentInteractionIndex !== null &&
         interazioni.dialogue[currentInteractionIndex] && (
@@ -158,22 +193,34 @@ const Scena4 = () => {
         )}
 
       {dialogoFinito && (
-        <div className="absolute bottom-10 flex justify-center w-full space-x-4">
+        <div
+          className={`absolute bottom-10 flex justify-center w-full space-x-4 transition-opacity duration-1000 ${
+            fadeButtons ? "opacity-0" : "opacity-100"
+          }`}
+        >
           <Button
-          stretch={true}
+            stretch={true}
             onClick={() => {
               console.log("Pulsante 1 cliccato");
-              navigate("/gameover"); // gameover
+              setFadeButtons(true); // Attiva il fade-out
+              setTimeout(() => {
+                setCurrentDialogueIndex(4);
+                setGameOver(1); // Imposta gameOver su true
+              }, 500); // Attendi 1 secondo per completare il fade-out
             }}
           >
             Torna dal gruppo
           </Button>
           <Button
-          stretch={true}
+            stretch={true}
             onClick={() => {
+              setCurrentDialogueIndex(5);
               console.log("Pulsante 2 cliccato");
-              // Aggiungi qui la logica per il secondo pulsante
-              navigate("/scena5"); // Naviga alla scena 5
+              setFadeButtons(true); // Attiva il fade-out
+              setFadeButtons(true);
+              setTimeout(() => {
+                setGameOver(2); // Imposta gameOver su true
+              }, 500); // Attendi 1 secondo per completare il fade-out
             }}
           >
             Fuggi
@@ -246,7 +293,7 @@ const Scena4 = () => {
               id: "exit",
               shape: "rect",
               coords: [354, 734, 1, 1418],
-              disabled: !disabledAreas.includes("stivali"),
+              disabled: bgImage !== 0 || !disabledAreas.includes("stivali"),
               value: "6",
             },
           ]}
