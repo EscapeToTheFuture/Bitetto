@@ -25,6 +25,7 @@ const Scena3 = () => {
 
   const [bgImage, setBgImage] = useState(0);
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
+  const [showButtons, setShowButtons] = useState(false); // Stato per mostrare i pulsanti con ritardo
   const navigate = useNavigate();
   const basementAudioRef = useRef(new Audio(basement)); // Riferimento per l'audio
 
@@ -44,6 +45,19 @@ const Scena3 = () => {
       audio.currentTime = 0; // Resetta il suono
     };
   }, []);
+
+  // Mostra i pulsanti con un ritardo di 1 secondo quando bgImage è 1
+  useEffect(() => {
+    if (bgImage === 1) {
+      const timer = setTimeout(() => {
+        setShowButtons(true); // Mostra i pulsanti dopo 1 secondo
+      }, 3000);
+
+      return () => clearTimeout(timer); // Pulisci il timer quando il componente viene smontato
+    } else {
+      setShowButtons(false); // Nascondi i pulsanti se bgImage cambia
+    }
+  }, [bgImage]);
 
   const handleDialogueClose = () => {
     if (currentDialogueIndex < dialoghi.dialogue.length - 1) {
@@ -92,9 +106,9 @@ const Scena3 = () => {
           }}
         />
 
-        {bgImage === 1 && (
+        {bgImage === 1 && showButtons && (
           <div
-            className="absolute bottom-4 left-0 w-full flex justify-center gap-4 p-4"
+            className="absolute bottom-4 left-0 w-full flex justify-center gap-12 p-4 fade-in"
             style={{
               zIndex: 10, // Assicura che i pulsanti siano visibili sopra altri elementi
             }}
@@ -117,7 +131,7 @@ const Scena3 = () => {
                 pointerEvents: "auto", // Permette l'interazione con il pulsante
               }}
             >
-              Torna indietro
+              Torna dal gruppo
             </Button>
           </div>
         )}
