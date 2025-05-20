@@ -13,18 +13,35 @@ import suspance from "../assets/sounds/generic/suspance.mp3";
 import winning from "../assets/sounds/generic/winning.mp3";
 import tick from "../assets/sounds/generic/tick.mp3";
 
-const audioSuspance = new Audio(suspance); // Istanza unica dell'audio
-audioSuspance.loop = true; // Riproduci in loop
-audioSuspance.volume = 0.5; // Imposta il volume iniziale
+const audioSuspance = new Audio(suspance);
+audioSuspance.loop = true;
+audioSuspance.volume = 0.5;
 
-const audioWinning = new Audio(winning); // Istanza unica dell'audio
-audioWinning.loop = true; // Riproduci in loop
-audioWinning.volume = 0.1; // Imposta il volume iniziale
+const audioWinning = new Audio(winning);
+audioWinning.loop = true;
+audioWinning.volume = 0.1;
+
+const preloadImage = (src) =>
+  new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+
+const preloadAudio = (src) =>
+  new Promise((resolve) => {
+    const audio = new window.Audio();
+    audio.oncanplaythrough = resolve;
+    audio.onerror = resolve;
+    audio.src = src;
+  });
 
 const Scena6 = () => {
   const [bgImage, setBgImage] = useState(0);
   const [fadeClass, setFadeClass] = useState("opacity-0"); // Inizia con opacità 0
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +79,18 @@ const Scena6 = () => {
       audioWinning.currentTime = 0;
     };
   }, [bgImage]);
+
+  useEffect(() => {
+    Promise.all([
+      preloadImage(Final),
+      preloadImage(occhiali1),
+      preloadImage(occhiali2),
+      preloadImage(occhiali3),
+      preloadImage(occhiali4),
+      preloadImage(FinalEnd),
+    ]).then(() => setLoading(false));
+    // Gli audio vengono istanziati solo quando servono
+  }, []);
 
   const dialoghi = {
     dialogue: [
@@ -140,6 +169,14 @@ const Scena6 = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </div>
+    );
+  }
 
   return (
     <div

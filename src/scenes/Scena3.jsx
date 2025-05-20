@@ -8,6 +8,22 @@ import Button from "../components/Button";
 import basement from "../assets/sounds/generic/basement.mp3";
 import paper from "../assets/sounds/generic/paper.mp3";
 
+const preloadImage = (src) =>
+  new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+
+const preloadAudio = (src) =>
+  new Promise((resolve) => {
+    const audio = new window.Audio();
+    audio.oncanplaythrough = resolve;
+    audio.onerror = resolve;
+    audio.src = src;
+  });
+
 const Scena3 = () => {
   const scenes = {
     0: { id: 0, src: Segrete },
@@ -26,6 +42,7 @@ const Scena3 = () => {
   const [bgImage, setBgImage] = useState(0);
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showButtons, setShowButtons] = useState(false); // Stato per mostrare i pulsanti con ritardo
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const basementAudioRef = useRef(new Audio(basement)); // Riferimento per l'audio
 
@@ -34,11 +51,14 @@ const Scena3 = () => {
     const audio = basementAudioRef.current;
     audio.volume = 0.5; // Imposta il volume iniziale
     audio.loop = true; // Riproduzione in loop
-    audio.play().then(() => {
-      console.log("Basement audio avviato correttamente");
-    }).catch((error) => {
-      console.error("Errore nella riproduzione di basement:", error);
-    });
+    audio
+      .play()
+      .then(() => {
+        console.log("Basement audio avviato correttamente");
+      })
+      .catch((error) => {
+        console.error("Errore nella riproduzione di basement:", error);
+      });
 
     return () => {
       audio.pause(); // Pausa il suono quando il componente viene smontato
@@ -59,11 +79,26 @@ const Scena3 = () => {
     }
   }, [bgImage]);
 
+  useEffect(() => {
+    Promise.all([
+      preloadImage(Segrete),
+      preloadImage(messSegreto),
+    ]).then(() => setLoading(false));
+  }, []);
+
   const handleDialogueClose = () => {
     if (currentDialogueIndex < dialoghi.dialogue.length - 1) {
       setCurrentDialogueIndex(currentDialogueIndex + 1);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
@@ -76,10 +111,13 @@ const Scena3 = () => {
       )}
 
       <div
-        className="relative"
         style={{
-          width: window.innerWidth > 1920 ? "1920px" : "100%",
-          height: "auto",
+          width: "100vw",
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "black",
         }}
       >
         <ImageMapper
@@ -94,12 +132,20 @@ const Scena3 = () => {
               id: "messSegreto",
               shape: "rect",
               coords: [1716, 1908, 2111, 2046],
-              disabled: bgImage === 1, // Disabilita l'area se bgImage è 1
+              disabled: bgImage === 1,
             },
           ]}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            margin: "0 auto",
+            background: "black",
+          }}
           onClick={(area) => {
             if (area.id === "messSegreto") {
-              setBgImage(1); // Imposta bgImage a 1 quando clicchi sull'area "messSegreto"
+              setBgImage(1);
               const audio = new Audio(paper);
               audio.play();
             }
@@ -110,27 +156,28 @@ const Scena3 = () => {
           <div
             className="absolute bottom-4 left-0 w-full flex justify-center gap-12 p-4 fade-in"
             style={{
-              zIndex: 10, // Assicura che i pulsanti siano visibili sopra altri elementi
+              zIndex: 10,
             }}
           >
             <Button
-            stretch={true}
+              stretch={true}
               onClick={() => {
-                navigate("/scena4"); // Naviga alla scena 4
+                navigate("/scena4");
               }}
               style={{
-                pointerEvents: "auto", // Permette l'interazione con il pulsante
+                pointerEvents: "auto",
               }}
             >
               Vai alla Stalla
             </Button>
             <Button
-            stretch={true}
+              stretch={true}
               onClick={() => {
-                navigate("/gameOver"); // Naviga alla scena Game Over
+                navigate("/gameOver");
+                localStorage.setItem("gameover_reason", "Sei tornato dalla classe");
               }}
               style={{
-                pointerEvents: "auto", // Permette l'interazione con il pulsante
+                pointerEvents: "auto",
               }}
             >
               Torna dal gruppo

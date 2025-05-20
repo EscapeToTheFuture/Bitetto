@@ -28,8 +28,11 @@ const SplashScreen = ({ title, location }) => {
   });
 
   const navigate = useNavigate();
-  // reset localstorage
-  localStorage.clear();
+
+  // Pulisci il localStorage all'avvio della scena
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   useEffect(() => {
     if (hasRequestedFullscreen) return;

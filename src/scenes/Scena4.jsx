@@ -24,24 +24,27 @@ const Scena4 = () => {
   const [exiting, setExiting] = useState(false); // Stato per gestire l'uscita
   const [gameOver, setGameOver] = useState(0); // Stato per gestire il game over
   const [fadeButtons, setFadeButtons] = useState(false); // Stato per il fade-out dei pulsanti
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const audio = fienileRef.current;
-    audio.volume = 0.5; // Imposta il volume iniziale
-    audio.loop = true; // Riproduzione in loop
-    audio
-      .play()
-      .then(() => {
-        console.log("Fienile audio avviato correttamente");
-      })
-      .catch((error) => {
-        console.error("Errore nella riproduzione di fienile:", error);
-      });
-
+    audio.volume = 0.5;
+    audio.loop = true;
+    audio.play().catch(() => {});
     return () => {
-      audio.pause(); // Pausa il suono quando il componente viene smontato
-      audio.currentTime = 0; // Resetta il suono
+      audio.pause();
+      audio.currentTime = 0;
     };
+  }, []);
+
+  useEffect(() => {
+    Promise.all([
+      preloadImage(Stalla),
+      preloadImage(bottiglia),
+      preloadImage(stivali),
+      preloadImage(exit),
+    ]).then(() => setLoading(false));
+    // Gli audio vengono istanziati solo quando servono
   }, []);
 
   const scenes = {
@@ -120,6 +123,30 @@ const Scena4 = () => {
     ],
   };
 
+  const preloadImage = (src) =>
+    new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = resolve;
+      img.onerror = resolve;
+      img.src = src;
+    });
+
+  const preloadAudio = (src) =>
+    new Promise((resolve) => {
+      const audio = new window.Audio();
+      audio.oncanplaythrough = resolve;
+      audio.onerror = resolve;
+      audio.src = src;
+    });
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}
@@ -164,6 +191,7 @@ const Scena4 = () => {
         <Dialogue
           key={`dialogue-${currentDialogueIndex}`} // Chiave univoca per il dialogo principale
           onClose={() => {
+            localStorage.setItem("gameover_reason", "Sei stato beccato!"); // <-- aggiungi questa riga
             navigate("/gameover"); // Naviga alla pagina di game over
           }}
           dialogue={dialoghi.dialogue[currentDialogueIndex]}
@@ -229,10 +257,14 @@ const Scena4 = () => {
       )}
 
       <div
-        className="relative"
         style={{
-          width: window.innerWidth > 1920 ? "1920px" : "100%",
-          height: "auto",
+          width: "100vw",
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "black",
+          position: "relative",
         }}
         onClick={(e) => e.stopPropagation()} // Impedisce che il clic sull'immagine propaghi l'evento
       >
@@ -248,7 +280,7 @@ const Scena4 = () => {
               id: "bottiglia",
               shape: "circle",
               coords: [3329, 1196, 189],
-              disabled: bgImage !== 0 || disabledAreas.includes("bottiglia"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("bottiglia"),
               value: "0",
             },
             {
@@ -258,35 +290,35 @@ const Scena4 = () => {
                 1320, 1840, 1349, 1819, 1409, 1826, 1416, 1960, 1423, 1999,
                 1395, 2010, 1352, 2003, 1306, 2017, 1250, 1992, 1320, 1957,
               ],
-              disabled: bgImage !== 0 || disabledAreas.includes("stivali"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("stivali"),
               value: "1",
             },
             {
               id: "mattoni",
               shape: "circle",
               coords: [2704, 1854, 155],
-              disabled: bgImage !== 0 || disabledAreas.includes("mattoni"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("mattoni"),
               value: "2",
             },
             {
               id: "armadio",
               shape: "rect",
               coords: [1243, 676, 1991, 1803],
-              disabled: bgImage !== 0 || disabledAreas.includes("armadio"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("armadio"),
               value: "3",
             },
             {
               id: "mangiatoia",
               shape: "poly",
               coords: [14, 1481, 99, 1792, 756, 1707, 847, 1439, 713, 1368],
-              disabled: bgImage !== 0 || disabledAreas.includes("mangiatoia"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("mangiatoia"),
               value: "4",
             },
             {
               id: "fieno",
               shape: "rect",
               coords: [3255, 1877, 3993, 2241],
-              disabled: bgImage !== 0 || disabledAreas.includes("fieno"), // Disabilita se già cliccata
+              disabled: bgImage !== 0 || disabledAreas.includes("fieno"),
               value: "5",
             },
             {
@@ -297,30 +329,38 @@ const Scena4 = () => {
               value: "6",
             },
           ]}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            margin: "0 auto",
+            background: "black",
+          }}
           onClick={(area) => {
             if (area.id === "bottiglia") {
-              setBgImage(1); // Imposta bgImage a 1 quando clicchi sull'area "bottiglia"
-              localStorage.setItem("colla", "true"); // Memorizza colla=true in localStorage
+              setBgImage(1);
+              localStorage.setItem("colla", "true");
               const audio = new Audio(correct);
-              audio.volume = 0.5; // Imposta il volume dell'audio
+              audio.volume = 0.5;
               audio.play();
             } else if (area.id === "stivali") {
-              setBgImage(2); // Imposta bgImage a 2 quando clicchi sull'area "stivali"
+              setBgImage(2);
               const audio = new Audio(correct);
-              audio.volume = 0.5; // Imposta il volume dell'audio
+              audio.volume = 0.5;
               audio.play();
             } else if (area.id === "exit") {
-              setFadeClass("fade-out"); // Aggiungi la classe di dissolvenza
-              setExiting(true); // Imposta lo stato di uscita
+              setFadeClass("fade-out");
+              setExiting(true);
               setTimeout(() => {
-                setBgImage(3); // Imposta bgImage a 3 quando clicchi sull'area "exit"
-                setFadeClass("fade-in"); // Aggiungi la classe di fade-in
-                setCurrentDialogueIndex(2); // Imposta il dialogo iniziale all'indice 2
-              }, 1000); // Attendi 1 secondo per completare il fade-out
+                setBgImage(3);
+                setFadeClass("fade-in");
+                setCurrentDialogueIndex(2);
+              }, 1000);
             }
             if (area.value !== undefined && area.id !== "exit") {
-              setCurrentInteractionIndex(parseInt(area.value)); // Imposta il dialogo corrispondente per le altre aree
-              setDisabledAreas((prev) => [...prev, area.id]); // Aggiungi l'area cliccata a quelle disabilitate
+              setCurrentInteractionIndex(parseInt(area.value));
+              setDisabledAreas((prev) => [...prev, area.id]);
             }
           }}
         />

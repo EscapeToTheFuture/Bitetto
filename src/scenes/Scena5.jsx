@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ImageMapper from "react-img-mapper";
 import Dialogue from "../components/Dialogue";
 import { useNavigate } from "react-router";
@@ -27,11 +27,12 @@ const Scena5 = () => {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0); // Indice del dialogo corrente
   const [dialogoFinito, setDialogoFinito] = useState(false); // Stato per il dialogo finito
   const [fadeButtons, setFadeButtons] = useState(""); // Stato per il fade-out dei pulsanti
+  const [loading, setLoading] = useState(true); // Stato di caricamento
   const navigate = useNavigate();
 
-  const audioGroove = new Audio(groove); // Istanza unica dell'audio
-  audioGroove.volume = 0.1; // Imposta il volume iniziale
-  audioGroove.loop = true; // Imposta il loop
+  const audioGroove = new Audio(groove);
+  audioGroove.volume = 0.1;
+  audioGroove.loop = true;
 
   useEffect(() => {
     // Ritarda il rendering iniziale per applicare correttamente il fade-in
@@ -41,6 +42,7 @@ const Scena5 = () => {
       setStart("opacity-100"); // Rimuovi l'opacità iniziale
       setFadeClass("fade-in"); // Applica il fade-in
       setShowContent(true); // Mostra il contenuto
+      setLoading(false); // Imposta il caricamento su false
     }, 500); // Ritardo di 100ms
 
     // Sequenza di animazioni
@@ -66,16 +68,18 @@ const Scena5 = () => {
     };
   }, []);
 
+  const audioGrooveRef = useRef(null);
+
   useEffect(() => {
-    // Avvia l'audio groove all'inizio della scena
-    audioGroove.play();
 
     return () => {
-      // Ferma l'audio quando il componente viene smontato
-      stopGrooveAudio();
+      // Stop e reset audio al cambio scena
+      if (audioGrooveRef.current) {
+        audioGrooveRef.current.pause();
+        audioGrooveRef.current.currentTime = 0;
+      }
     };
   }, []);
-
   const scenes = {
     0: { id: 0, src: TorreEst },
     1: { id: 1, src: TorreInt },
@@ -151,6 +155,41 @@ const Scena5 = () => {
     }, 100); // Riduci il volume ogni 100ms
   };
 
+  useEffect(() => {
+    Promise.all([
+      preloadImage(TorreEst),
+      preloadImage(TorreInt),
+      preloadImage(Finale1),
+      preloadImage(Finale2),
+      preloadImage(Finale2pt2),
+    ]).then(() => setLoading(false));
+    // Gli audio vengono istanziati solo quando servono
+  }, []);
+
+  const preloadImage = (src) =>
+    new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = resolve;
+      img.onerror = resolve;
+      img.src = src;
+    });
+
+  const preloadAudio = (src) =>
+    new Promise((resolve) => {
+      const audio = new window.Audio();
+      audio.oncanplaythrough = resolve;
+      audio.onerror = resolve;
+      audio.src = src;
+    });
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex flex-col items-center justify-center h-screen ${start} ${fadeClass}`}
@@ -179,8 +218,12 @@ const Scena5 = () => {
               setCurrentDialogueIndex(currentDialogueIndex + 1); // Avanza al dialogo successivo
             }
             if (currentDialogueIndex === 5) {
+              audioGroove.pause(); // Ferma l'audio
+              audioGroove.currentTime = 0; // Resetta l'audio
+
               setTimeout(() => {
-                navigate("/ending"); // Naviga alla scena finale
+                navigate("/gameover"); // Naviga alla scena finale
+                localStorage.setItem("gameover_reason", "Sei stato beccato!"); // <-- aggiungi questa riga
               }, 2000); // Attendi 2 secondi prima di navigare
             }
           }}
@@ -205,8 +248,14 @@ const Scena5 = () => {
                 setCurrentDialogueIndex(8); // Resetta l'indice del dialogo
               }, 2000); // Attendi 2 secondi prima di navigare
             } else if (currentDialogueIndex === 8) {
+              audioGroove.pause(); // Ferma l'audio
+              audioGroove.currentTime = 0; // Resetta l'audio
               setTimeout(() => {
-                navigate("/ending"); // Naviga alla scena
+                navigate("/gameover"); // Naviga alla scena
+                localStorage.setItem(
+                  "gameover_reason",
+                  "Non hai risolto il mistero!"
+                ); // <-- aggiungi questa riga
               }, 2000); // Attendi 2 secondi prima di navigare
             }
           }}
@@ -223,6 +272,9 @@ const Scena5 = () => {
             onClick={() => {
               console.log("Pulsante 1 cliccato");
               stopGrooveAudio(); // Ferma l'audio con dissolvenza
+              audioGroove.pause(); // Ferma l'audio
+              audioGroove.currentTime = 0; // Resetta l'audio
+
               setFadeButtons(true); // Attiva il fade-out
               setFadeClass("fade-out"); // Aggiungi la classe di fade-out
               setStart("opacity-0"); // Rimuovi l'opacità iniziale
@@ -247,6 +299,9 @@ const Scena5 = () => {
             onClick={() => {
               console.log("Pulsante 2 cliccato");
               stopGrooveAudio(); // Ferma l'audio con dissolvenza
+              audioGroove.pause(); // Ferma l'audio
+              audioGroove.currentTime = 0; // Resetta l'audio
+
               setFadeButtons(true); // Attiva il fade-out
               setFadeClass("fade-out"); // Aggiungi la classe di fade-out
               setStart("opacity-0"); // Rimuovi l'opacità iniziale
@@ -272,6 +327,9 @@ const Scena5 = () => {
               onClick={() => {
                 console.log("Pulsante 3 cliccato");
                 stopGrooveAudio(); // Ferma l'audio con dissolvenza
+                audioGroove.pause(); // Ferma l'audio
+                audioGroove.currentTime = 0; // Resetta l'audio
+
                 setFadeButtons(true); // Attiva il fade-out
                 setFadeClass("fade-out"); // Aggiungi la classe di fade-out
                 setStart("opacity-0"); // Rimuovi l'opacità iniziale

@@ -37,28 +37,23 @@ const Scena2 = () => {
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
   const [dialogoFinito, setDialogoFinito] = useState(false); // Stato per il dialogo finito
+  const [loading, setLoading] = useState(true);
   const basementAudioRef = useRef(new Audio(basement)); // Riferimento per il suono di sottofondo
   const unlockAudioRef = useRef(new Audio(unlock)); // Riferimento per il suono di sblocco
 
   // Riproduci il suono di sottofondo "basement" all'inizio della scena
   useEffect(() => {
-    const audio = basementAudioRef.current;
-    audio.volume = 0.5; // Imposta il volume iniziale
-    audio.loop = true; // Riproduzione in loop
-    audio
-      .play()
-      .then(() => {
-        console.log("Basement audio avviato correttamente");
-      })
-      .catch((error) => {
-        console.error("Errore nella riproduzione di basement:", error);
-      });
-
-    return () => {
-      audio.pause(); // Pausa il suono quando il componente viene smontato
-      audio.currentTime = 0; // Resetta il suono
-    };
-  }, []);
+    if (!loading) {
+      const audio = basementAudioRef.current;
+      audio.volume = 0.5;
+      audio.loop = true;
+      audio.play().catch(() => {});
+      return () => {
+        audio.pause();
+        audio.currentTime = 0;
+      };
+    }
+  }, [loading]);
 
   // Riproduci il suono "unlock" quando bgImage è impostato su 4
   useEffect(() => {
@@ -209,6 +204,51 @@ const Scena2 = () => {
     ],
   };
 
+  const preloadImage = (src) =>
+  new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+
+const preloadAudio = (src) =>
+  new Promise((resolve) => {
+    const audio = new window.Audio();
+    audio.oncanplaythrough = resolve;
+    audio.onerror = resolve;
+    audio.src = src;
+  });
+
+  // Preload solo immagini
+  useEffect(() => {
+    Promise.all(
+      Object.values(rooms).map(room => preloadImage(room.src))
+    ).then(() => setLoading(false));
+  }, []);
+
+  // Avvia l'audio solo dopo il caricamento delle immagini
+  useEffect(() => {
+    if (!loading) {
+      const audio = basementAudioRef.current;
+      audio.volume = 0.5;
+      audio.loop = true;
+      audio.play().catch(() => {});
+      return () => {
+        audio.pause();
+        audio.currentTime = 0;
+      };
+    }
+  }, [loading]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}
@@ -239,57 +279,71 @@ const Scena2 = () => {
           />
         )}
 
-      <ImageMapper
-        src={rooms[bgImage].src}
-        name="room"
-        imgWidth={1920}
-        parentWidth={window.innerWidth > 1920 ? 1920 : window.innerWidth}
-        responsive={true}
-        natural
-        areas={[
-          {
-            id: "libri",
-            shape: "poly",
-            coords: [
-              360, 894, 438, 919, 452, 961, 402, 997, 314, 969, 311, 930,
-            ],
-            disabled: bgImage !== 2,
-          },
-          {
-            id: "palla",
-            shape: "circle",
-            coords: [253, 1865, 27],
-            disabled: bgImage !== 3,
-          },
-          {
-            id: "occhiali",
-            shape: "rect",
-            coords: [3485, 964, 3636, 1031],
-            disabled: bgImage !== 0,
-          },
-          {
-            id: "scettro",
-            shape: "poly",
-            coords: [
-              2309, 667, 2355, 723, 2348, 769, 2288, 808, 2182, 1123, 2157,
-              1119, 2252, 812, 2231, 783, 2221, 738, 2224, 695, 2267, 677,
-            ],
-            disabled: bgImage !== 1,
-          },
-          {
-            id: "porta",
-            shape: "rect",
-            coords: [1360, 11, 2579, 1610],
-            disabled: bgImage !== 4 && bgImage !== 5,
-          },
-        ]}
+      <div
         style={{
-          width: "100vw", // Adatta l'immagine alla larghezza del viewport
-          height: "100vh", // Adatta l'immagine all'altezza del viewport
-          objectFit: "contain", // Mantiene le proporzioni e assicura che l'immagine non venga tagliata
+          width: "100vw",
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "black", // opzionale, per evitare bordi bianchi
         }}
-        onClick={(area) => handleAreaClick(area)}
-      />
+      >
+        <ImageMapper
+          src={rooms[bgImage].src}
+          name="room"
+          imgWidth={1920}
+          parentWidth={window.innerWidth > 1920 ? 1920 : window.innerWidth}
+          responsive={true}
+          natural
+          areas={[
+            {
+              id: "libri",
+              shape: "poly",
+              coords: [
+                360, 894, 438, 919, 452, 961, 402, 997, 314, 969, 311, 930,
+              ],
+              disabled: bgImage !== 2,
+            },
+            {
+              id: "palla",
+              shape: "circle",
+              coords: [253, 1865, 27],
+              disabled: bgImage !== 3,
+            },
+            {
+              id: "occhiali",
+              shape: "rect",
+              coords: [3485, 964, 3636, 1031],
+              disabled: bgImage !== 0,
+            },
+            {
+              id: "scettro",
+              shape: "poly",
+              coords: [
+                2309, 667, 2355, 723, 2348, 769, 2288, 808, 2182, 1123, 2157,
+                1119, 2252, 812, 2231, 783, 2221, 738, 2224, 695, 2267, 677,
+              ],
+              disabled: bgImage !== 1,
+            },
+            {
+              id: "porta",
+              shape: "rect",
+              coords: [1360, 11, 2579, 1610],
+              disabled: bgImage !== 4 && bgImage !== 5,
+            },
+          ]}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            margin: "0 auto",
+            background: "black",
+          }}
+          onClick={(area) => handleAreaClick(area)}
+        />
+      </div>
     </div>
   );
 };

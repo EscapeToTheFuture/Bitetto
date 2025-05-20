@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Atrio1 from "../assets/images/backGrounds/atrio/Atrio-1.png";
 import Atrio2 from "../assets/images/backGrounds/atrio/Atrio-2.png";
 import Atrio3 from "../assets/images/backGrounds/atrio/Atrio-3.png";
@@ -8,6 +8,22 @@ import Dialogue from "../components/Dialogue";
 import { useNavigate } from "react-router";
 import footsteps from "../assets/sounds/generic/footsteps.mp3";
 import museoambient from "../assets/sounds/generic/museoambient.mp3";
+
+const preloadImage = (src) =>
+  new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+
+const preloadAudio = (src) =>
+  new Promise((resolve) => {
+    const audio = new window.Audio();
+    audio.oncanplaythrough = resolve;
+    audio.onerror = resolve;
+    audio.src = src;
+  });
 
 const Scena1 = () => {
   const scene = {
@@ -53,20 +69,26 @@ const Scena1 = () => {
   const [fadeClass, setFadeClass] = useState("");
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showHint, setShowHint] = useState(false); // Stato per il suggerimento
-  const [ambientAudio, setAmbientAudio] = useState(new Audio(museoambient));
+  const ambientAudio = useRef(null);
   const [dialogoFinito, setDialogoFinito] = useState(false); // Stato per il dialogo finito
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const passi = useRef(null);
 
   useEffect(() => {
-    ambientAudio.volume = 0.2;
-    ambientAudio.loop = true;
-    ambientAudio.play();
-
+    if (!loading && !ambientAudio.current) {
+      ambientAudio.current = new Audio(museoambient);
+      ambientAudio.current.volume = 0.2;
+      ambientAudio.current.loop = true;
+      ambientAudio.current.play();
+    }
     return () => {
-      ambientAudio.pause();
-      ambientAudio.currentTime = 0;
+      if (ambientAudio.current) {
+        ambientAudio.current.pause();
+        ambientAudio.current.currentTime = 0;
+      }
     };
-  }, [ambientAudio]);
+  }, [loading]);
 
   // Imposta dialogoFinito su true solo se currentDialogueIndex è alla fine
   useEffect(() => {
@@ -129,8 +151,8 @@ const Scena1 = () => {
     if (area.id === "corridoio" && currentDialogueIndex === scene.dialogue.length - 1) {
       setShowHint(false);
 
-      fadeOutAudio(ambientAudio, () => {
-        ambientAudio.volume = 0.5;
+      fadeOutAudio(ambientAudio.current, () => {
+        ambientAudio.current.volume = 0.5;
       });
 
       setFadeClass("");
@@ -142,18 +164,24 @@ const Scena1 = () => {
           setBgImage(3);
           setFadeClass("fade-in");
 
-          ambientAudio.pause();
-          ambientAudio.currentTime = 0;
+          ambientAudio.current.pause();
+          ambientAudio.current.currentTime = 0;
 
-          const passi = new Audio(footsteps);
-          passi.volume = 0.5;
-          passi.play();
+          const playFootsteps = () => {
+            if (!passi.current) {
+              passi.current = new Audio(footsteps);
+              passi.current.volume = 0.5;
+            }
+            passi.current.play();
+          };
+
+          playFootsteps();
 
           setTimeout(() => {
             setFadeClass("fade-out");
             setTimeout(() => {
-              passi.pause();
-              passi.currentTime = 0;
+              passi.current.pause();
+              passi.current.currentTime = 0;
               navigate("/scena2");
             }, 2000);
           }, 2000);
@@ -162,32 +190,62 @@ const Scena1 = () => {
     }
   };
 
+  // Preload solo immagini per il loader
+  useEffect(() => {
+    Promise.all(
+      atrios.map((a) => preloadImage(a.src))
+    ).then(() => setLoading(false));
+  }, []);
+
+  // Mostra un loader finché non è tutto pronto
+  if (loading) {
+    return (
+      <section className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <h1>Caricamento...</h1>
+      </section>
+    );
+  }
+
   return (
     <section className={`flex flex-col items-center justify-center h-screen ${fadeClass}`}>
-      <ImageMapper
-        imgWidth={1920}
-        parentWidth={window.innerWidth > 1920 ? 1920 : window.innerWidth}
-        responsive={true}
-        natural
-        src={atrios[bgImage].src}
-        name="atrio"
-        onClick={(area, _, event) => {
-          handleAreaClick(area);
-        }}
-        areas={[
-          {
-            id: "corridoio",
-            shape: "rect",
-            coords: [3275, 158, 3998, 1530],
-            disabled: currentDialogueIndex < scene.dialogue.length - 1,
-          },
-        ]}
+      <div
         style={{
-          width: "100%",
-          height: "auto",
-          objectFit: "contain",
+          width: "100vw",
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "black",
         }}
-      />
+      >
+        <ImageMapper
+          imgWidth={1920}
+          parentWidth={window.innerWidth > 1920 ? 1920 : window.innerWidth}
+          responsive={true}
+          natural
+          src={atrios[bgImage].src}
+          name="atrio"
+          onClick={(area, _, event) => {
+            handleAreaClick(area);
+          }}
+          areas={[
+            {
+              id: "corridoio",
+              shape: "rect",
+              coords: [3275, 158, 3998, 1530],
+              disabled: currentDialogueIndex < scene.dialogue.length - 1,
+            },
+          ]}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            margin: "0 auto",
+            background: "black",
+          }}
+        />
+      </div>
 
       {showHint && (
         <Dialogue
